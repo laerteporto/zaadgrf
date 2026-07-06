@@ -1,0 +1,31 @@
+Passo a passo pra aplicar:
+
+Copie ad_monitor_write.ps1 pra C:\Scripts\ no WinServer2022
+Crie a Scheduled Task (comando acima ou via UI)
+Rode a task uma vez manualmente e confirme que C:\Scripts\ad_monitor_output.json tem conteúdo
+Atualize o conteúdo do ad_monitor.conf do agente pra nova linha de UserParameter
+Restart-Service "Zabbix Agent"
+Teste local: zabbix_agentd.exe -t ad.monitor.data — deve responder na hora, sem demora
+Execute now no item ad.monitor.data no Zabbix, e confere o zabbix_agentd.log
+
+
+Caminho mais confiável: cria pela interface do Task Scheduler (menos chance de erro de sintaxe):
+
+Abra Task Scheduler (taskschd.msc)
+Action → Create Task (não "Create Basic Task", pra ter mais controle)
+Aba General:
+
+Name: AD Monitor Collector
+Marque "Run whether user is logged on or not"
+Marque "Run with highest privileges"
+Em "Configure for": Windows Server 2019/2022
+
+Aba Triggers → New:
+Begin the task: On a schedule
+Daily, começando agora
+Marque "Repeat task every" → 5 minutes → for a duration of → Indefinitely
+
+Aba Actions → New:
+Action: Start a program
+Program/script: powershell.exe
+Add arguments: -NoProfile -ExecutionPolicy Bypass -File "C:\Scripts\ad_monitor_write.ps1"
